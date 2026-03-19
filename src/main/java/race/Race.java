@@ -2,9 +2,8 @@ package race;
 
 import object.circuit.Circuit;
 import object.circuit.Track;
+import object.circuit.sector.Segment;
 import object.circuit.sector.Sector;
-import object.circuit.sector.Straight;
-import object.circuit.sector.Turn;
 import utilclass.UtilClass;
 
 import java.util.*;
@@ -76,85 +75,8 @@ public class Race {
                 sectorNumber++;
                 System.out.printf("\nSector %d:\n", sectorNumber);
 
-                // FOR EACH TURN
-                int turnNumber = 0;
-                for (Turn turn : sector.getTurns()) {
-                    turnNumber++;
-                    System.out.println();
-                    // Get a copy of the current standing (to ensure data integrity rather than customizing on real data)
-                    Map<Racer, Double> currentLapTimes = new HashMap<>(liveTime);
-
-                    // FOR EACH RACER
-                    // Calculate each racer's Turn performance and store valid ones for average calculation'
-                    Map<Racer, Double> turnPerformances = new HashMap<>();
-                    List<Double> validTurnPerformances = new ArrayList<>();
-                    for (Racer racer : racers) {
-                        // Ensure only active drivers are calculated
-                        if (racer.getState() == 1) {
-                            double driverTurnPerformance = turn.calculateScore(racer);
-                            turnPerformances.put(racer, driverTurnPerformance);
-                            validTurnPerformances.add(driverTurnPerformance);
-                            System.out.printf("Racer: %s - Turn %d | Performance: %.3f\n", racer.getDriver().getName(), turnNumber, driverTurnPerformance);
-                        } else {
-                            turnPerformances.put(racer, 0.0);
-                        }
-                    }
-
-                    // GET AVERAGE TURN PERFORMANCE
-                    double averageTurnPerformance = validTurnPerformances.stream().mapToDouble(Double::doubleValue).average().orElse(0.0);
-                    System.out.printf("\nAverage Turn Performance: %.3f\n", averageTurnPerformance);
-
-                    // Compare with the average turnPerformance of all active drivers and add to liveTime;
-                    for (Racer racer : turnPerformances.keySet()) {
-                        double relativePerformance = turnPerformances.get(racer)/averageTurnPerformance;
-                        double addedTime = calculateAddedTime(relativePerformance);
-                        currentLapTimes.put(racer, currentLapTimes.get(racer) + addedTime);
-                        System.out.printf("Racer: %s - Turn %d | Relative Performance: %.3f, Time Added: %.3f\n", racer.getDriver().getName(), turnNumber, relativePerformance, addedTime);
-                    }
-
-                    // Update liveTime
-                    liveTime = currentLapTimes;
-                }
-
-                // FOR EACH STRAIGHT
-                int straightNumber = 0;
-                for (Straight straight : sector.getStraights()) {
-                    straightNumber++;
-                    System.out.println();
-                    // Get a copy of the current standing (to ensure data integrity rather than customizing on real data)
-                    Map<Racer, Double> currentLapTimes = new HashMap<>(liveTime);
-
-                    // FOR EACH RACER
-                    // Calculate each racer's Straight performance and store valid ones for average calculation
-                    Map<Racer, Double> straightPerformances = new HashMap<>();
-                    List<Double> validStraightPerformances = new ArrayList<>();
-                    for (Racer racer : racers) {
-                        // Ensure only active drivers are calculated
-                        if (racer.getState() == 1) {
-                            double driverStraightPerformance = straight.calculateScore(racer);
-                            straightPerformances.put(racer, driverStraightPerformance);
-                            System.out.printf("Racer: %s - Straight %d | Performance: %.3f\n", racer.getDriver().getName(), straightNumber, driverStraightPerformance);
-                            validStraightPerformances.add(driverStraightPerformance);
-                        } else {
-                            straightPerformances.put(racer, 0.0);
-                        }
-                    }
-
-                    // GET AVERAGE STRAIGHT PERFORMANCE
-                    double averageStraightPerformance = validStraightPerformances.stream().mapToDouble(Double::doubleValue).average().orElse(0.0);
-                    System.out.printf("\nAverage Straight Performance: %.3f\n", averageStraightPerformance);
-
-                    // Compare with the average straightPerformance of all active drivers and add to liveTime;
-                    for (Racer racer : straightPerformances.keySet()) {
-                        double relativePerformance = straightPerformances.get(racer) / averageStraightPerformance;
-                        double addedTime = calculateAddedTime(relativePerformance);
-                        currentLapTimes.put(racer, currentLapTimes.get(racer) + addedTime);
-                        System.out.printf("Racer: %s - Straight %d | Relative Performance: %.3f, Time Added: %.3f\n", racer.getDriver().getName(), straightNumber, relativePerformance, addedTime);
-                    }
-
-                    // Update liveTime
-                    liveTime = currentLapTimes;
-                }
+                processSegments(sector.getTurns(), "Turn");
+                processSegments(sector.getStraights(), "Straight");
             }
 
             // Save Lap Record
@@ -170,6 +92,42 @@ public class Race {
                 double lapDifference = liveTime.get(racers[i]) - previousLapTime;
                 System.out.printf("(%.3f)\n", lapDifference);
             }
+        }
+    }
+
+    private void processSegments(Segment[] segments, String segmentLabel) {
+        int segmentNumber = 0;
+        for (Segment segment : segments) {
+            segmentNumber++;
+            System.out.println();
+
+            // Work on a snapshot, then commit once this segment is fully evaluated.
+            Map<Racer, Double> currentLapTimes = new HashMap<>(liveTime);
+            Map<Racer, Double> performances = new HashMap<>();
+            List<Double> validPerformances = new ArrayList<>();
+
+            for (Racer racer : racers) {
+                if (racer.getState() == 1) {
+                    double performance = segment.calculateScore(racer);
+                    performances.put(racer, performance);
+                    validPerformances.add(performance);
+                    System.out.printf("Racer: %s - %s %d | Performance: %.3f\n", racer.getDriver().getName(), segmentLabel, segmentNumber, performance);
+                } else {
+                    performances.put(racer, 0.0);
+                }
+            }
+
+            double averagePerformance = validPerformances.stream().mapToDouble(Double::doubleValue).average().orElse(0.0);
+            System.out.printf("Average %s Performance: %.3f\n\n", segmentLabel, averagePerformance);
+
+            for (Racer racer : performances.keySet()) {
+                double relativePerformance = performances.get(racer) / averagePerformance;
+                double addedTime = calculateAddedTime(relativePerformance);
+                currentLapTimes.put(racer, currentLapTimes.get(racer) + addedTime);
+                System.out.printf("Racer: %s - %s %d | Relative Performance: %.3f, Time Added: %.3f\n", racer.getDriver().getName(), segmentLabel, segmentNumber, relativePerformance, addedTime);
+            }
+
+            liveTime = currentLapTimes;
         }
     }
 

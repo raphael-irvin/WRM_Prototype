@@ -19,6 +19,7 @@ public class Turn implements Segment{
         this.sharpness = sharpness;
     }
 
+    @Override
     public double calculateScore(Racer racer) {
         // Base Score
         double base = 0.2*racer.getCar().getChassis().getAerodynamicity() +

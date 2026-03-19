@@ -19,6 +19,7 @@ public class Straight implements Segment {
         this.length = length;
     }
 
+    @Override
     public double calculateScore(Racer racer) {
         // Base Score
         double base = 0.3*racer.getCar().getChassis().getAerodynamicity() +
