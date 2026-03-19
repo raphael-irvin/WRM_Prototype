@@ -97,12 +97,7 @@ public class Race {
                     for (Racer racer : turnPerformances.keySet()) {
                         double relativePerformance = turnPerformances.get(racer)/averageTurnPerformance;
                         System.out.printf("Racer: %s - Turn %d | Relative Performance: %.2f\n", racer.getDriver().getName(), turnNumber, relativePerformance);
-                        double addedTime;
-                        if (relativePerformance > 1) {
-                            addedTime = UtilClass.generateRandomDouble(1, 1.2) - (relativePerformance - 1) * UtilClass.generateRandomDouble(0.5, 0.75);
-                        } else {
-                            addedTime = UtilClass.generateRandomDouble(1,1.2) + (1 - relativePerformance) * UtilClass.generateRandomDouble(0.5, 0.75);
-                        }
+                        double addedTime = calculateAddedTime(relativePerformance);
                         currentLapTimes.put(racer, currentLapTimes.get(racer) + addedTime);
                         System.out.printf("Racer: %s - Turn %d | Time Added: %.2f\n", racer.getDriver().getName(), turnNumber, addedTime);
                     }
@@ -135,12 +130,7 @@ public class Race {
                     for (Racer racer : straightPerformances.keySet()) {
                         double relativePerformance = straightPerformances.get(racer) / averageStraightPerformance;
                         System.out.printf("Racer: %s - Straight %d | Relative Performance: %.2f\n", racer.getDriver().getName(), straightNumber, relativePerformance);
-                        double addedTime;
-                        if (relativePerformance > 1) {
-                            addedTime = UtilClass.generateRandomDouble(1, 1.2) - (relativePerformance - 1) * UtilClass.generateRandomDouble(0.5, 0.75);
-                        } else {
-                            addedTime = UtilClass.generateRandomDouble(1, 1.2) + (1 - relativePerformance) * UtilClass.generateRandomDouble(0.5, 0.75);
-                        }
+                        double addedTime = calculateAddedTime(relativePerformance);
                         currentLapTimes.put(racer, currentLapTimes.get(racer) + addedTime);
                         System.out.printf("Racer: %s - Straight %d | Time Added: %.2f\n", racer.getDriver().getName(), straightNumber, addedTime);
                     }
@@ -156,6 +146,16 @@ public class Race {
             }
             }
         }
+
+    public double calculateAddedTime(double relativePerformance) {
+        double addedTime;
+        if (relativePerformance > 1) {
+            addedTime = UtilClass.generateRandomDouble(1, 1.2) - (relativePerformance - 1) * UtilClass.generateRandomDouble(0.5, 0.75);
+        } else {
+            addedTime = UtilClass.generateRandomDouble(1, 1.2) + (1 - relativePerformance) * UtilClass.generateRandomDouble(0.5, 0.75);
+        }
+        return addedTime;
+    }
 
     public void displayRaceInformation() {
         System.out.printf("\nRACE ID: %s\n", raceID);

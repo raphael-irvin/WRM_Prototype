@@ -3,7 +3,7 @@ package object.circuit.sector;
 import race.Racer;
 import utilclass.UtilClass;
 
-public class Straight {
+public class Straight implements Segment {
 
     /* LENGTH PROPERTIES
     VERY LONG = 4
@@ -15,6 +15,7 @@ public class Straight {
     private int length;
 
     private Straight(int length) {
+        super();
         this.length = length;
     }
 

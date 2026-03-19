@@ -3,7 +3,7 @@ package object.circuit.sector;
 import race.Racer;
 import utilclass.UtilClass;
 
-public class Turn {
+public class Turn implements Segment{
 
     /* SHARPNESS PROPERTIES
     VERY SHARP = 4
@@ -15,6 +15,7 @@ public class Turn {
     private int sharpness;
 
     private Turn(int sharpness) {
+        super();
         this.sharpness = sharpness;
     }
 
