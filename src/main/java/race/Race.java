@@ -84,13 +84,23 @@ public class Race {
 
             // Display Lap Information
 
-            // Display Racer Standings and Lap Time Difference compared to the previous lap
+            // Display Racer Standings, Lap Time Differences, and Pace compared to the previous lap
             System.out.printf("\nLap %d Standings:\n", lap);
             for (int i = 0; i < racers.length; i++) {
-                System.out.printf("%d. %s - %.3f ", i+1, racers[i].getDriver().getName(), liveTime.get(racers[i]));
                 double previousLapTime = lapRecords.get(lap - 1).get(racers[i]);
                 double lapDifference = liveTime.get(racers[i]) - previousLapTime;
-                System.out.printf("(%.3f)\n", lapDifference);
+                double previousLapDifference;
+                double pace;
+                if (lap == 1) {
+                    previousLapDifference = 0;
+                    pace = lapDifference;
+                } else {
+                    previousLapDifference = previousLapTime - lapRecords.get(lap - 2).get(racers[i]);
+                    pace = lapDifference - previousLapDifference;
+                }
+
+                System.out.printf("%d. %s - %.3f ", i+1, racers[i].getDriver().getName(), liveTime.get(racers[i]));
+                System.out.printf("(%.3f) | Pacing: %.3f \n", lapDifference, pace);
             }
         }
     }
