@@ -23,7 +23,7 @@ public class Turn {
         double base = 0.2*racer.getCar().getChassis().getAerodynamicity() +
                 0.2*racer.getCar().getGearbox().getAcceleration() +
                 0.2*racer.getCar().getBrakes().getDeceleration() +
-                (0.2*racer.getDriver().getCornering()) * (1 + 0.1*sharpness) +
+                (0.3*racer.getDriver().getCornering()) * (1 + 0.1*sharpness) +
                 0.1*racer.getDriver().getFocus();
 
         // Focus Variance
