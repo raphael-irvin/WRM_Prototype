@@ -49,6 +49,10 @@ public class Race {
         return race;
     }
 
+    public void simulateRace() {
+        matchEngine.simulateRace();
+    }
+
     public void instantiateRacers(Racer[] racers) {
         this.racers = racers;
         for (Racer racer : racers) {

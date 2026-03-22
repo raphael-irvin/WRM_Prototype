@@ -13,7 +13,7 @@ public class MatchEngine {
 
     private Race race;
 
-    public void simulateRace() {
+    protected void simulateRace() {
         // Validate Race States
         if (race.getRacers().length == 0 || race.getCircuit() == null || race.getTrack() == null) {
             throw new IllegalStateException("Race is not properly instantiated");

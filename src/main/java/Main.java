@@ -39,6 +39,6 @@ public class Main {
 
         MatchEngine matchEngine = new MatchEngine();
         Race race = Race.instantiateRandomRace(racers, circuit, matchEngine);
-        race.getMatchEngine().simulateRace();
+        race.simulateRace();
     }
 }
