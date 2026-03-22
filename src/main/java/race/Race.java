@@ -24,6 +24,7 @@ public class Race {
 
     // RACE DYNAMIC INFORMATION
     private Map<Racer, Double> liveTime = new HashMap<>();
+    private Map<Racer, Integer> liveStandings = new HashMap<>();
 
     // RACE LAP RECORDS
     private HashMap<Integer, Map<Racer, Double>> lapRecords = new HashMap<>();
@@ -109,5 +110,13 @@ public class Race {
 
     public HashMap<Integer, Map<Racer, Double>> getLapRecords() {
         return lapRecords;
+    }
+
+    public Map<Racer, Integer> getLiveStandings() {
+        return liveStandings;
+    }
+
+    public void setLiveStandings(Map<Racer, Integer> liveStandings) {
+        this.liveStandings = liveStandings;
     }
 }

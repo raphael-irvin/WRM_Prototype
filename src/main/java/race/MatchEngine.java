@@ -5,7 +5,9 @@ import object.circuit.sector.Segment;
 import utilclass.UtilClass;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -43,30 +45,62 @@ public class MatchEngine {
                 processSegments(sector.getStraights(), "Straight");
             }
 
+
             // Save Lap Record
             race.getLapRecords().put(lap, new HashMap<>(race.getLiveTime()));
 
-            // Display Lap Information
+
+            // CHANGE RACE STANDINGS
+            // Build deterministic standings by sorting racer-time pairs directly.
+            Map<Racer, Integer> standings = buildStandingsByLiveTime();
+
+            // Save Standings to Race
+            race.setLiveStandings(standings);
+
+            // DISPLAY LAP INFORMATION
 
             // Display Racer Standings, Lap Time Differences, and Pace compared to the previous lap
             System.out.printf("\nLap %d Standings:\n", lap);
-            for (int i = 0; i < race.getRacers().length; i++) {
-                double previousLapTime = race.getLapRecords().get(lap - 1).get(race.getRacers()[i]);
-                double lapDifference = race.getLiveTime().get(race.getRacers()[i]) - previousLapTime;
+            for (Map.Entry<Racer, Integer> standingEntry : standings.entrySet()) {
+                Racer racer = standingEntry.getKey();
+                int position = standingEntry.getValue();
+
+                double previousLapTime = race.getLapRecords().get(lap - 1).get(racer);
+                double lapDifference = race.getLiveTime().get(racer) - previousLapTime;
                 double previousLapDifference;
                 double pace;
                 if (lap == 1) {
                     previousLapDifference = 0;
                     pace = lapDifference;
                 } else {
-                    previousLapDifference = previousLapTime - race.getLapRecords().get(lap - 2).get(race.getRacers()[i]);
+                    previousLapDifference = previousLapTime - race.getLapRecords().get(lap - 2).get(racer);
                     pace = lapDifference - previousLapDifference;
                 }
 
-                System.out.printf("%d. %s - %.3f ", i+1, race.getRacers()[i].getDriver().getName(), race.getLiveTime().get(race.getRacers()[i]));
+                System.out.printf("%d. %s - %.3f ", position, racer.getDriver().getName(), race.getLiveTime().get(racer));
                 System.out.printf("(%.3f) | Pacing: %.3f \n", lapDifference, pace);
             }
         }
+    }
+
+    private Map<Racer, Integer> buildStandingsByLiveTime() {
+        Map<Racer, Integer> racerBaseOrder = new HashMap<>();
+        for (int i = 0; i < race.getRacers().length; i++) {
+            racerBaseOrder.put(race.getRacers()[i], i);
+        }
+
+        List<Racer> sortedRacers = new ArrayList<>(race.getLiveTime().keySet());
+        sortedRacers.sort(
+                Comparator.comparingDouble((Racer racer) -> race.getLiveTime().get(racer))
+                        .thenComparingInt(racerBaseOrder::get)
+        );
+
+        Map<Racer, Integer> standings = new LinkedHashMap<>();
+        for (int i = 0; i < sortedRacers.size(); i++) {
+            standings.put(sortedRacers.get(i), i + 1);
+        }
+
+        return standings;
     }
 
     private void processSegments(Segment[] segments, String segmentLabel) {
@@ -80,6 +114,7 @@ public class MatchEngine {
             Map<Racer, Double> performances = new HashMap<>();
             List<Double> validPerformances = new ArrayList<>();
 
+            // Calculate Performance for each racer on the particular segment
             for (Racer racer : race.getRacers()) {
                 if (racer.getState() == 1) {
                     double performance = segment.calculateScore(racer);
@@ -91,6 +126,7 @@ public class MatchEngine {
                 }
             }
 
+            // Calculate Average Performance and Relative Performance, then add time accordingly
             double averagePerformance = validPerformances.stream().mapToDouble(Double::doubleValue).average().orElse(0.0);
             System.out.printf("Average %s Performance: %.3f\n\n", segmentLabel, averagePerformance);
 
