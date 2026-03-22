@@ -10,6 +10,9 @@ import java.util.*;
 
 public class Race {
 
+    // RACE SIMULATION CLASS
+    private MatchEngine matchEngine;
+
     // RACE STATIC INFORMATION
     private Racer[] racers;
     private Circuit circuit;
@@ -29,11 +32,15 @@ public class Race {
         this.circuit = circuit;
     }
 
-    public static Race instantiateRandomRace(Racer[] racers, Circuit circuit) {
+    public static Race instantiateRandomRace(Racer[] racers, Circuit circuit, MatchEngine matchEngine) {
         Race race = new Race(circuit);
         race.instantiateRacers(racers);
         race.track = race.circuit.getRandomTrack();
         race.laps = race.track.getLaps();
+
+        // Establish Handshake with Match Engine
+        race.matchEngine = matchEngine;
+        race.matchEngine.setRace(race);
 
         // TEMPORARY ID Generation
         race.raceID = String.valueOf(UtilClass.generateRandomInt(1000, 9999));
@@ -47,108 +54,6 @@ public class Race {
         for (Racer racer : racers) {
             liveTime.put(racer, 0.0);
         }
-    }
-
-    public void simulateRace() {
-        // Validate Race States
-        if (racers.length == 0 || circuit == null || track == null) {
-            throw new IllegalStateException("Race is not properly instantiated");
-        }
-
-        if (state != 0) {
-            throw new IllegalStateException("Race has already started or finished");
-        }
-
-        // Set Lap Record for Lap 0 (Initial Standings)
-        lapRecords.put(0, new HashMap<>(liveTime));
-
-        // Change Race State
-        state = 1;
-
-        // FOR EACH LAP
-        for (int lap = 1; lap <= laps; lap++) {
-            System.out.printf("\n--- LAP %d ---\n", lap);
-
-            // FOR EACH SECTOR (GAP TIME UPDATE HAPPENS IN TURNS AND STRAIGHTS)
-            int sectorNumber = 0;
-            for (Sector sector : track.getSectors()) {
-                sectorNumber++;
-                System.out.printf("\nSector %d:\n", sectorNumber);
-
-                processSegments(sector.getTurns(), "Turn");
-                processSegments(sector.getStraights(), "Straight");
-            }
-
-            // Save Lap Record
-            lapRecords.put(lap, new HashMap<>(liveTime));
-
-            // Display Lap Information
-
-            // Display Racer Standings, Lap Time Differences, and Pace compared to the previous lap
-            System.out.printf("\nLap %d Standings:\n", lap);
-            for (int i = 0; i < racers.length; i++) {
-                double previousLapTime = lapRecords.get(lap - 1).get(racers[i]);
-                double lapDifference = liveTime.get(racers[i]) - previousLapTime;
-                double previousLapDifference;
-                double pace;
-                if (lap == 1) {
-                    previousLapDifference = 0;
-                    pace = lapDifference;
-                } else {
-                    previousLapDifference = previousLapTime - lapRecords.get(lap - 2).get(racers[i]);
-                    pace = lapDifference - previousLapDifference;
-                }
-
-                System.out.printf("%d. %s - %.3f ", i+1, racers[i].getDriver().getName(), liveTime.get(racers[i]));
-                System.out.printf("(%.3f) | Pacing: %.3f \n", lapDifference, pace);
-            }
-        }
-    }
-
-    private void processSegments(Segment[] segments, String segmentLabel) {
-        int segmentNumber = 0;
-        for (Segment segment : segments) {
-            segmentNumber++;
-            System.out.println();
-
-            // Work on a snapshot, then commit once this segment is fully evaluated.
-            Map<Racer, Double> currentLapTimes = new HashMap<>(liveTime);
-            Map<Racer, Double> performances = new HashMap<>();
-            List<Double> validPerformances = new ArrayList<>();
-
-            for (Racer racer : racers) {
-                if (racer.getState() == 1) {
-                    double performance = segment.calculateScore(racer);
-                    performances.put(racer, performance);
-                    validPerformances.add(performance);
-                    System.out.printf("Racer: %s - %s %d | Performance: %.3f\n", racer.getDriver().getName(), segmentLabel, segmentNumber, performance);
-                } else {
-                    performances.put(racer, 0.0);
-                }
-            }
-
-            double averagePerformance = validPerformances.stream().mapToDouble(Double::doubleValue).average().orElse(0.0);
-            System.out.printf("Average %s Performance: %.3f\n\n", segmentLabel, averagePerformance);
-
-            for (Racer racer : performances.keySet()) {
-                double relativePerformance = performances.get(racer) / averagePerformance;
-                double addedTime = calculateAddedTime(relativePerformance);
-                currentLapTimes.put(racer, currentLapTimes.get(racer) + addedTime);
-                System.out.printf("Racer: %s - %s %d | Relative Performance: %.3f, Time Added: %.3f\n", racer.getDriver().getName(), segmentLabel, segmentNumber, relativePerformance, addedTime);
-            }
-
-            liveTime = currentLapTimes;
-        }
-    }
-
-    public double calculateAddedTime(double relativePerformance) {
-        double addedTime;
-        if (relativePerformance > 1) {
-            addedTime = UtilClass.generateRandomDouble(1, 1.2) - (relativePerformance - 1) * UtilClass.generateRandomDouble(0.5, 0.75);
-        } else {
-            addedTime = UtilClass.generateRandomDouble(1, 1.2) + (1 - relativePerformance) * UtilClass.generateRandomDouble(0.5, 0.75);
-        }
-        return addedTime;
     }
 
     public void displayRaceInformation() {
@@ -180,5 +85,25 @@ public class Race {
 
     public int getLaps() {
         return laps;
+    }
+
+    public MatchEngine getMatchEngine() {
+        return matchEngine;
+    }
+
+    public int getState() {
+        return state;
+    }
+
+    public void setState(int state) {
+        this.state = state;
+    }
+
+    public Map<Racer, Double> getLiveTime() {
+        return liveTime;
+    }
+
+    public HashMap<Integer, Map<Racer, Double>> getLapRecords() {
+        return lapRecords;
     }
 }

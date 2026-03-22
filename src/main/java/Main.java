@@ -1,6 +1,7 @@
 import object.Driver;
 import object.circuit.Circuit;
 import object.vehicle.car.Car;
+import race.MatchEngine;
 import race.Race;
 import race.Racer;
 
@@ -36,7 +37,8 @@ public class Main {
 
         Circuit circuit = Circuit.createRandomSingleTrackCircuit();
 
-        Race race = Race.instantiateRandomRace(racers, circuit);
-        race.simulateRace();
+        MatchEngine matchEngine = new MatchEngine();
+        Race race = Race.instantiateRandomRace(racers, circuit, matchEngine);
+        race.getMatchEngine().simulateRace();
     }
 }
